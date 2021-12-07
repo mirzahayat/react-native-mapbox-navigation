@@ -27,9 +27,9 @@ import com.mapbox.navigation.ui.map.NavigationMapboxMap
 class MapboxNavigationView(private val context: ThemedReactContext) : NavigationView(context.baseContext), NavigationListener, OnNavigationReadyCallback {
     private var origin: Point? = null
     private var destination: Point? = null
+    private var waypoints:List<Point> = ArrayList()
     private var shouldSimulateRoute = false
     private var showsEndOfRouteFeedback = false
-    private var mute = false
     private lateinit var navigationMapboxMap: NavigationMapboxMap
     private lateinit var mapboxNavigation: MapboxNavigation
 
@@ -59,8 +59,8 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
                 .zoom(15.0)
                 .build()
     }
-
     override fun onNavigationReady(isRunning: Boolean) {
+        println("On Navugatuion Ready ")
         try {
             val accessToken = Mapbox.getAccessToken()
             if (accessToken == null) {
@@ -83,23 +83,32 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
             }
 
             this.navigationMapboxMap = this.retrieveNavigationMapboxMap()!!
-
             //this.retrieveMapboxNavigation()?.let { this.mapboxNavigation = it } // this does not work
-
             // fetch the route
             val navigationOptions = MapboxNavigation
                     .defaultNavigationOptionsBuilder(context, accessToken)
                     .isFromNavigationUi(true)
                     .build()
             this.mapboxNavigation = MapboxNavigationProvider.create(navigationOptions)
-            this.mapboxNavigation.requestRoutes(RouteOptions.builder()
-                    .applyDefaultParams()
-                    .accessToken(accessToken)
-                    .coordinates(mutableListOf(origin, destination))
-                    .profile(RouteUrl.PROFILE_DRIVING)
-                    .steps(true)
-                    .voiceInstructions(!this.mute)
-                    .build(), routesReqCallback)
+            if (waypoints.isNotEmpty()){
+                this.mapboxNavigation.requestRoutes(RouteOptions.builder()
+                        .applyDefaultParams()
+                        .accessToken(accessToken)
+                        .coordinates(this.waypoints)
+                        .profile(RouteUrl.PROFILE_WALKING)
+                        .steps(true)
+                        .voiceInstructions(true)
+                        .build(), routesReqCallback)
+            } else {
+                this.mapboxNavigation.requestRoutes(RouteOptions.builder()
+                        .applyDefaultParams()
+                        .accessToken(accessToken)
+                        .coordinates(mutableListOf(origin, destination))
+                        .profile(RouteUrl.PROFILE_DRIVING)
+                        .steps(true)
+                        .voiceInstructions(true)
+                        .build(), routesReqCallback)
+            }
         } catch (ex: Exception) {
             sendErrorToReact(ex.toString())
         }
@@ -206,8 +215,13 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
     fun setOrigin(origin: Point?) {
         this.origin = origin
     }
+    fun setWaypoints(waypoints: List<Point>) {
+        println("message way points"+waypoints)
+        this.waypoints = waypoints
+    }
 
     fun setDestination(destination: Point?) {
+        println("message waypointdes"+ this.waypoints + destination )
         this.destination = destination
     }
 
@@ -217,10 +231,6 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
 
     fun setShowsEndOfRouteFeedback(showsEndOfRouteFeedback: Boolean) {
         this.showsEndOfRouteFeedback = showsEndOfRouteFeedback
-    }
-
-    fun setMute(mute: Boolean) {
-        this.mute = mute
     }
 
     fun onDropViewInstance() {

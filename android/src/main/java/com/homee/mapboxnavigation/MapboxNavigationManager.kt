@@ -56,6 +56,24 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
         }
         view.setOrigin(Point.fromLngLat(sources.getDouble(0), sources.getDouble(1)))
     }
+    @ReactProp(name = "waypoints")
+    fun setWaypoints(view: MapboxNavigationView, sources: ReadableArray?) {
+        if (sources == null) {
+            view.setWaypoints(emptyList())
+            return
+        }
+        println("abv bcnbscghvahsdvca"+ sources)
+
+        var coordinateList : MutableList<Point> =ArrayList()
+
+        for (i in 0 until sources.size()){
+            var p = Point.fromLngLat(sources.getArray(i).getDouble(0),sources.getArray(i).getDouble(1))
+            coordinateList.add(p)
+        }
+//        view.setWaypoints(Point.fromLngLat(sources.getDouble(0), sources.getDouble(1)))
+        println("coordinateList"+ coordinateList)
+        view.setWaypoints(coordinateList)
+    }
 
     @ReactProp(name = "destination")
     fun setDestination(view: MapboxNavigationView, sources: ReadableArray?) {
@@ -74,14 +92,5 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
     @ReactProp(name = "showsEndOfRouteFeedback")
     fun setShowsEndOfRouteFeedback(view: MapboxNavigationView, showsEndOfRouteFeedback: Boolean) {
         view.setShowsEndOfRouteFeedback(showsEndOfRouteFeedback)
-    }
-
-    @ReactProp(name = "mute")
-    fun setMute(view: MapboxNavigationView, mute: Boolean) {
-        val isMuted = view.isVoiceGuidanceMuted()
-        if (mute != isMuted) {
-            view.toggleMute()
-        }
-        view.setMute(mute)
     }
 }

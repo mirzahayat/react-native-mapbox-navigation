@@ -4,6 +4,7 @@ import android.location.Location
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.mapbox.api.directions.v5.DirectionsCriteria
 import com.mapbox.api.directions.v5.models.DirectionsRoute
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.geojson.Point
@@ -56,7 +57,7 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
 
     private fun getInitialCameraPosition(): CameraPosition {
         return CameraPosition.Builder()
-                .zoom(15.0)
+                .zoom(25.0)
                 .build()
     }
     override fun onNavigationReady(isRunning: Boolean) {
@@ -94,8 +95,18 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
                 this.mapboxNavigation.requestRoutes(RouteOptions.builder()
                         .applyDefaultParams()
                         .accessToken(accessToken)
+                        .coordinates(mutableListOf(origin, destination))
+                        .profile(DirectionsCriteria.PROFILE_DRIVING)
+                        .steps(true)
+                        .voiceInstructions(true)
+                        .build(), routesReqCallback)
+                Thread.sleep(2000)
+
+                this.mapboxNavigation.requestRoutes(RouteOptions.builder()
+                        .applyDefaultParams()
+                        .accessToken(accessToken)
                         .coordinates(this.waypoints)
-                        .profile(RouteUrl.PROFILE_WALKING)
+                        .profile(DirectionsCriteria.PROFILE_DRIVING)
                         .steps(true)
                         .voiceInstructions(true)
                         .build(), routesReqCallback)
@@ -120,8 +131,12 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
                 sendErrorToReact("No route found")
                 return;
             }
+    if (routes.isNotEmpty()){
+        startNav(routes[0] )
+    } else{
+        onNavigationReady(true)
+    }
 
-            startNav(routes[0])
         }
 
         override fun onRoutesRequestFailure(throwable: Throwable, routeOptions: RouteOptions) {

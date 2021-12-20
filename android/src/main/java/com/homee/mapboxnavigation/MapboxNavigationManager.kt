@@ -9,8 +9,8 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
-import javax.annotation.Nonnull
 
+import javax.annotation.Nonnull
 class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : SimpleViewManager<MapboxNavigationView>() {
     init {
         mCallerContext.runOnUiQueueThread {
@@ -62,15 +62,13 @@ class MapboxNavigationManager(var mCallerContext: ReactApplicationContext) : Sim
             view.setWaypoints(emptyList())
             return
         }
-        println("abv bcnbscghvahsdvca"+ sources)
-
         var coordinateList : MutableList<Point> =ArrayList()
-
-        for (i in 0 until sources.size()){
+        for (i in 1 until sources.size()){
+            if(i%2 == 0){
             var p = Point.fromLngLat(sources.getArray(i).getDouble(0),sources.getArray(i).getDouble(1))
             coordinateList.add(p)
+            }
         }
-//        view.setWaypoints(Point.fromLngLat(sources.getDouble(0), sources.getDouble(1)))
         println("coordinateList"+ coordinateList)
         view.setWaypoints(coordinateList)
     }

@@ -28,6 +28,7 @@ import com.mapbox.navigation.ui.map.NavigationMapboxMap
 class MapboxNavigationView(private val context: ThemedReactContext) : NavigationView(context.baseContext), NavigationListener, OnNavigationReadyCallback {
     private var origin: Point? = null
     private var destination: Point? = null
+    private var Coordinate = mutableListOf<Point?>()
     private var waypoints:List<Point> = ArrayList()
     private var shouldSimulateRoute = false
     private var showsEndOfRouteFeedback = false
@@ -56,24 +57,32 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
     }
 
     private fun getInitialCameraPosition(): CameraPosition {
+
         return CameraPosition.Builder()
-                .zoom(25.0)
+                .zoom(10.0)
+                .tilt(20.0)
+                .bearing(60.0)
                 .build()
     }
     override fun onNavigationReady(isRunning: Boolean) {
         println("On Navugatuion Ready ")
         try {
+
             val accessToken = Mapbox.getAccessToken()
             if (accessToken == null) {
                 sendErrorToReact("Mapbox access token is not set")
                 return
             }
-
             if (origin == null || destination == null) {
                 sendErrorToReact("origin and destination are required")
                 return
+            }else{
+                Coordinate.add(origin)
+                Coordinate.add(destination)
             }
-
+            if (waypoints != null){
+                Coordinate = this.waypoints.toMutableList()
+            }
             if (::navigationMapboxMap.isInitialized) {
                 return
             }
@@ -95,19 +104,19 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
                 this.mapboxNavigation.requestRoutes(RouteOptions.builder()
                         .applyDefaultParams()
                         .accessToken(accessToken)
-                        .coordinates(mutableListOf(origin, destination))
-                        .profile(DirectionsCriteria.PROFILE_DRIVING)
+                        .coordinates(Coordinate)
+                        .profile(DirectionsCriteria.PROFILE_WALKING)
                         .steps(true)
                         .voiceInstructions(true)
                         .build(), routesReqCallback)
                 Thread.sleep(2000)
-
                 this.mapboxNavigation.requestRoutes(RouteOptions.builder()
                         .applyDefaultParams()
                         .accessToken(accessToken)
                         .coordinates(this.waypoints)
-                        .profile(DirectionsCriteria.PROFILE_DRIVING)
-                        .steps(true)
+                        .profile(DirectionsCriteria.PROFILE_WALKING)
+
+                        .steps(false)
                         .voiceInstructions(true)
                         .build(), routesReqCallback)
             } else {
@@ -115,7 +124,7 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
                         .applyDefaultParams()
                         .accessToken(accessToken)
                         .coordinates(mutableListOf(origin, destination))
-                        .profile(RouteUrl.PROFILE_DRIVING)
+                        .profile(RouteUrl.PROFILE_WALKING)
                         .steps(true)
                         .voiceInstructions(true)
                         .build(), routesReqCallback)
@@ -131,12 +140,8 @@ class MapboxNavigationView(private val context: ThemedReactContext) : Navigation
                 sendErrorToReact("No route found")
                 return;
             }
-    if (routes.isNotEmpty()){
-        startNav(routes[0] )
-    } else{
-        onNavigationReady(true)
-    }
 
+            startNav(routes[0])
         }
 
         override fun onRoutesRequestFailure(throwable: Throwable, routeOptions: RouteOptions) {
